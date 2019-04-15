@@ -67,6 +67,30 @@ defmodule Grakn.Protocol do
     {:error, Grakn.Error.exception("Cannot commit if transaction is not open"), state}
   end
 
+  def handle_execute(queries, _params, opts, %{transaction: tx} = state)
+      when transaction_open?(tx) and is_list(queries) do
+    require IEx
+    IEx.pry()
+
+    graql =
+      Enum.map(queries, fn %{graql: graql} ->
+        graql
+      end)
+      |> Enum.join(" ")
+
+    case Grakn.Transaction.query(tx, graql, Keyword.get(opts, :include_inferences)) do
+      {:ok, iterator} ->
+        {:ok, iterator, state}
+
+      {:error, reason} ->
+        {:error,
+         Grakn.Error.exception(
+           "Failed to execute #{inspect(graql)}. Reason: #{Map.get(reason, :message, "unknown")}",
+           reason
+         ), state}
+    end
+  end
+
   def handle_execute(%{graql: graql}, _params, opts, %{transaction: tx} = state)
       when transaction_open?(tx) do
     case Grakn.Transaction.query(tx, graql, Keyword.get(opts, :include_inferences)) do

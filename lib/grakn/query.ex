@@ -17,3 +17,20 @@ defimpl DBConnection.Query, for: Grakn.Query do
   def encode(_query, params, _opts), do: params
   def decode(_query, result, _opts), do: result
 end
+
+defimpl DBConnection.Query, for: List do
+  def parse(query, _opts) when is_list(query) do
+    Enum.map(
+      query,
+      fn %Grakn.Query{graql: query} ->
+        query
+      end
+    )
+    |> Enum.join()
+  end
+
+  def parse(query, _opts), do: query
+  def describe(query, _opts), do: query
+  def encode(_query, params, _opts), do: params
+  def decode(_query, result, _opts), do: result
+end

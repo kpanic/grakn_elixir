@@ -43,8 +43,16 @@ defmodule Grakn do
   Execute a query on the connection process and raise an exception if there is
   an error. See `query/3` for documentation.
   """
+
+  @spec query!(conn(), [%Grakn.Query{}], Keyword.t()) :: any()
+  def query!(conn, queries, opts \\ [])
+
+  def query!(conn, queries, opts) when is_list(queries) do
+    DBConnection.execute!(conn, queries, [], with_transaction_config(opts))
+  end
+
   @spec query!(conn(), Grakn.Query.t(), Keyword.t()) :: any()
-  def query!(conn, %Grakn.Query{} = query, opts \\ []) do
+  def query!(conn, %Grakn.Query{} = query, opts) do
     DBConnection.execute!(conn, query, [], with_transaction_config(opts))
   end
 
